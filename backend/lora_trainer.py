@@ -364,10 +364,11 @@ def train_durian_lora(
     learning_rate: float = 1e-4,
     batch_size: int = 1,
     lora_r: int = 8,
+    pretrained_model_name: str = "runwayml/stable-diffusion-v1-5",
 ):
     """
     训练榴莲品种 LoRA 模型的便捷函数
-    
+
     Args:
         image_dir: 训练图像目录
         instance_prompt: 实例提示词
@@ -377,22 +378,24 @@ def train_durian_lora(
         learning_rate: 学习率
         batch_size: 批次大小
         lora_r: LoRA 秩
+        pretrained_model_name: 预训练模型名称
     """
     # 创建训练器
     trainer = LoRATrainer(
+        pretrained_model_name=pretrained_model_name,
         output_dir=f"{output_dir}/{variety_name}"
     )
-    
+
     # 设置 LoRA
     trainer.setup_lora(r=lora_r, lora_alpha=lora_r * 4)
-    
+
     # 创建数据集
     dataset = DurianDataset(
         image_dir=image_dir,
         instance_prompt=instance_prompt,
         tokenizer=trainer.tokenizer,
     )
-    
+
     # 创建数据加载器
     dataloader = DataLoader(
         dataset,
@@ -400,7 +403,7 @@ def train_durian_lora(
         shuffle=True,
         num_workers=0,
     )
-    
+
     # 开始训练
     trainer.train(
         train_dataloader=dataloader,
@@ -439,12 +442,63 @@ DURIAN_TRAINING_CONFIGS = {
 }
 
 
-if __name__ == "__main__":
-    # 示例：训练猫山王 LoRA
+# ============================================================
+# 路径解析与 CLI 入口 (新增)
+# ============================================================
+
+def resolve_data_dir(variety: str, override, paths: dict) -> Path:
+    if override:
+        return Path(override)
+    return paths["training"] / variety
+
+
+def resolve_output_dir(variety: str, override, paths: dict) -> Path:
+    if override:
+        return Path(override)
+    return paths["models_lora"] / variety
+
+
+def load_variety_trigger(variety: str) -> str:
+    from backend.configs.loader import load_varieties
+    return load_varieties()[variety]["trigger"]
+
+
+def main():
+    import argparse
+    from backend.configs.loader import load_paths, load_training_defaults
+
+    defaults = load_training_defaults()
+    paths = load_paths()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--variety", required=True)
+    parser.add_argument("--data_dir", type=Path, default=None)
+    parser.add_argument("--output_dir", type=Path, default=None)
+    parser.add_argument("--epochs", type=int, default=defaults["epochs"])
+    parser.add_argument("--rank", type=int, default=defaults["rank"])
+    parser.add_argument("--learning_rate", type=float, default=defaults["learning_rate"])
+    parser.add_argument("--resolution", type=int, default=defaults["resolution"])
+    parser.add_argument("--mixed_precision", default=defaults["mixed_precision"])
+    parser.add_argument("--base_model", default=defaults["base_model"])
+    args = parser.parse_args()
+
+    data_dir = resolve_data_dir(args.variety, args.data_dir, paths)
+    output_dir = resolve_output_dir(args.variety, args.output_dir, paths)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    trigger = load_variety_trigger(args.variety)
+
     train_durian_lora(
-        image_dir=r"D:\榴莲\durian_class\test",
-        instance_prompt=DURIAN_TRAINING_CONFIGS["musang_king"]["instance_prompt"],
-        output_dir="models/lora",
-        variety_name="musang_king",
-        num_epochs=50,
+        image_dir=str(data_dir),
+        instance_prompt=trigger,
+        output_dir=str(output_dir),
+        variety_name=args.variety,
+        num_epochs=args.epochs,
+        learning_rate=args.learning_rate,
+        lora_r=args.rank,
+        pretrained_model_name=args.base_model,
     )
+
+
+if __name__ == "__main__":
+    main()
