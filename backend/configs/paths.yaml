@@ -1,0 +1,67 @@
+# 数据/模型外置存储位置
+# Windows 本机:
+data_root: "D:/durian-data"
+
+# 各子目录(相对 data_root)
+subdirs:
+  raw: "raw"
+  candidates: "candidates"
+  personal: "personal"
+  training: "training"
+  models_lora: "models/lora"
+  models_merged: "models/merged"
+  models_openvino: "models/openvino"
+  outputs: "outputs"
+
+# 4 个品种的元信息
+varieties:
+  musang_king:
+    trigger: "musangking durian"
+    name_cn: "猫山王"
+    name_en: "Musang King"
+    keywords:
+      - "musang king durian"
+      - "猫山王榴莲"
+      - "猫山王 切开"
+  monthong:
+    trigger: "monthong durian"
+    name_cn: "金枕头"
+    name_en: "Monthong"
+    keywords:
+      - "monthong durian"
+      - "金枕头榴莲"
+      - "monthong cut open"
+  blackthorn:
+    trigger: "blackthorn durian"
+    name_cn: "黑刺王"
+    name_en: "Black Thorn"
+    keywords:
+      - "black thorn durian"
+      - "黑刺榴莲"
+  red_prawn:
+    trigger: "redprawn durian"
+    name_cn: "红虾"
+    name_en: "Red Prawn"
+    keywords:
+      - "red prawn durian"
+      - "红虾榴莲"
+
+# 训练默认值
+training_defaults:
+  base_model: "runwayml/stable-diffusion-v1-5"
+  resolution: 512
+  rank: 16
+  alpha: 32
+  learning_rate: 0.0001
+  epochs: 50
+  batch_size: 1
+  mixed_precision: "fp16"
+
+# 服务器推理默认值
+serve_defaults:
+  base_model: "runwayml/stable-diffusion-v1-5"
+  steps: 6
+  cfg_scale: 1.5
+  width: 512
+  height: 512
+  scheduler: "lcm"
