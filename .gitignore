@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Models & data (太大,不入库)
+models/
+training_data/
+raw/
+candidates/
+personal_data/
+outputs/
+*.safetensors
+*.ckpt
+*.bin
+*.onnx
+openvino_models/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
+logs/
+
+# Archive
+archive/old_*.tar.gz
+
+# Personal large files
+generated_durian_*.png
+*.tar.gz
+ziUpcpXC
