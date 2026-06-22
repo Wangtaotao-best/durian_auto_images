@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  durian-api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: durian-aigc:latest
+    container_name: durian-api
+    restart: unless-stopped
+    ports:
+      - "${DURIAN_PORT:-8000}:8000"
+    environment:
+      DURIAN_OV_MODELS_ROOT: /data/models/openvino
+      DURIAN_IMAGES_ROOT: /data/images
+      DURIAN_FRONTEND_DIST: /app/frontend/dist
+      # OpenVINO CPU threads, match your server's physical core count
+      OMP_NUM_THREADS: ${OMP_NUM_THREADS:-8}
+    volumes:
+      # Models externalized: place OpenVINO models at ./models/openvino/<variety>/
+      - ./models/openvino:/data/models/openvino:ro
+      # Persist generated images
+      - durian-images:/data/images
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 24G
+        reservations:
+          memory: 12G
+
+volumes:
+  durian-images:

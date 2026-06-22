@@ -1,0 +1,11 @@
+archive/
+.git/
+.idea/
+.vscode/
+node_modules/
+*.tar.gz
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
+frontend/node_modules/
