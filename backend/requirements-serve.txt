@@ -1,0 +1,23 @@
+# PyTorch CPU 版在服务器上单独装: pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision
+
+# Web 框架
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.8.0
+python-multipart>=0.0.9
+aiofiles>=24.1.0
+
+# 推理引擎 (CPU)
+openvino>=2024.4
+optimum-intel[openvino]>=1.20.0
+diffusers>=0.30.0
+transformers>=4.44.0
+
+# 图像
+Pillow>=10.0.0
+numpy>=1.26.0
+
+# 工具
+tqdm
+loguru>=0.7.0
+pyyaml>=6.0
