@@ -1,0 +1,162 @@
+# 榴莲图像生成配置文件
+
+# 基础模型配置
+model:
+  base_model: "runwayml/stable-diffusion-v1-5"  # 基础 SD 模型
+  device: "cuda"  # cuda 或 cpu
+  dtype: "float16"  # float16 或 float32
+
+# 生成参数
+generation:
+  width: 512
+  height: 512
+  num_inference_steps: 30
+  guidance_scale: 7.5
+  scheduler: "euler_a"  # ddim, euler_a, dpm
+
+# LoRA 配置
+lora:
+  enabled: true
+  models_dir: "models/lora"
+  r: 8  # LoRA 秩
+  alpha: 32  # LoRA alpha
+  
+  # 各品种 LoRA 路径
+  varieties:
+    musang_king: "models/lora/musang_king/checkpoint-final"
+    monthong: "models/lora/monthong/checkpoint-final"
+    black_thorn: "models/lora/black_thorn/checkpoint-final"
+    sultan: "models/lora/sultan/checkpoint-final"
+    red_prawn: "models/lora/red_prawn/checkpoint-final"
+
+# ControlNet 配置
+controlnet:
+  enabled: true
+  control_type: "canny"  # canny, hed, openpose, depth
+  conditioning_scale: 0.8
+  models:
+    canny: "lllyasviel/sd-controlnet-canny"
+    hed: "lllyasviel/sd-controlnet-hed"
+    openpose: "lllyasviel/sd-controlnet-openpose"
+    depth: "lllyasviel/sd-controlnet-depth"
+
+# 数据集生成配置
+dataset:
+  output_dir: "output/dataset"
+  
+  # 品种配置
+  varieties:
+    - name: "musang_king"
+      num_images: 1000
+      prompt_template: "musang_king"
+    - name: "monthong"
+      num_images: 1000
+      prompt_template: "monthong"
+    - name: "black_thorn"
+      num_images: 800
+      prompt_template: "black_thorn"
+    - name: "sultan"
+      num_images: 800
+      prompt_template: "sultan"
+    - name: "red_prawn"
+      num_images: 600
+      prompt_template: "red_prawn"
+  
+  # 批量生成配置
+  batch_size: 4
+  seed_base: 42
+
+# 训练配置
+training:
+  # 训练数据目录
+  data_dir: "training_data"
+  
+  # 训练参数
+  num_epochs: 100
+  learning_rate: 0.0001
+  batch_size: 1
+  save_steps: 500
+  
+  # 优化器参数
+  optimizer:
+    type: "AdamW"
+    beta1: 0.9
+    beta2: 0.999
+    weight_decay: 0.01
+  
+  # 学习率调度
+  lr_scheduler:
+    type: "cosine"
+    warmup_steps: 100
+
+# 提示词模板
+prompts:
+  musang_king:
+    positive: >
+      professional product photography of Musang King durian, 
+      golden yellow creamy flesh, vibrant color, 
+      split open showing thick pods, 
+      dark wooden table background, 
+      soft natural lighting from left, 
+      shallow depth of field, 
+      8k ultra HD, highly detailed
+    negative: >
+      low quality, blurry, distorted, deformed, 
+      bad anatomy, extra limbs, missing limbs, 
+      watermark, signature, text, logo
+  
+  monthong:
+    positive: >
+      professional product photography of Monthong durian, 
+      Thai golden pillow durian, 
+      pale yellow flesh, thick and plump, 
+      light linen background, 
+      bright natural lighting, 
+      clean and fresh style, 
+      8k ultra HD, highly detailed
+    negative: >
+      low quality, blurry, distorted, deformed, 
+      bad anatomy, extra limbs, missing limbs, 
+      watermark, signature, text, logo
+  
+  black_thorn:
+    positive: >
+      professional product photography of Black Thorn durian, 
+      deep orange flesh, intense color, 
+      premium Malaysian durian, 
+      black slate background, 
+      dramatic side lighting, 
+      luxury food photography style, 
+      8k ultra HD, highly detailed
+    negative: >
+      low quality, blurry, distorted, deformed, 
+      bad anatomy, extra limbs, missing limbs, 
+      watermark, signature, text, logo
+  
+  sultan:
+    positive: >
+      professional product photography of Sultan durian D24, 
+      pale yellow creamy flesh, 
+      olive green husk, 
+      rustic wooden table, 
+      warm natural lighting, 
+      food photography style, 
+      8k ultra HD, highly detailed
+    negative: >
+      low quality, blurry, distorted, deformed, 
+      bad anatomy, extra limbs, missing limbs, 
+      watermark, signature, text, logo
+  
+  red_prawn:
+    positive: >
+      professional product photography of Red Prawn durian, 
+      vibrant orange-red flesh like shrimp, 
+      Udang Merah durian, 
+      dark ceramic plate, 
+      soft natural lighting, 
+      premium food photography, 
+      8k ultra HD, highly detailed
+    negative: >
+      low quality, blurry, distorted, deformed, 
+      bad anatomy, extra limbs, missing limbs, 
+      watermark, signature, text, logo
