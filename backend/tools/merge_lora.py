@@ -34,12 +34,21 @@ def merge(base_model: str, lora_path: str, output_dir: Path, alpha: float = 0.8)
         requires_safety_checker=False,
     )
 
-    logger.info(f"用 PEFT 方式加载 LoRA: {lora_path} (alpha={alpha})")
-    # PEFT LoRA: 先加载到 UNet
-    unet = pipe.unet
-    peft_model = PeftModel.from_pretrained(unet, lora_path, adapter_name="default")
-    peft_model = peft_model.merge_and_unload()
-    pipe.unet = peft_model
+    logger.info(f"加载 LoRA: {lora_path} (alpha={alpha})")
+    lora_path_obj = Path(lora_path)
+    if (lora_path_obj / "adapter_config.json").exists():
+        # PEFT 格式 (本地训练的 LoRA)
+        logger.info("检测到 PEFT 格式,使用 PeftModel 加载")
+        unet = pipe.unet
+        peft_model = PeftModel.from_pretrained(unet, lora_path, adapter_name="default")
+        peft_model = peft_model.merge_and_unload()
+        pipe.unet = peft_model
+    else:
+        # Diffusers 原生格式 (如 LCM-LoRA)
+        logger.info("检测到 Diffusers 原生格式,使用 load_lora_weights 加载")
+        pipe.load_lora_weights(lora_path)
+        pipe.fuse_lora(lora_scale=alpha)
+        pipe.unload_lora_weights()
 
     # 把 pipeline 转为 float16 减小体积
     pipe = pipe.to(dtype=torch.float16)
@@ -48,7 +57,11 @@ def merge(base_model: str, lora_path: str, output_dir: Path, alpha: float = 0.8)
     pipe.save_pretrained(str(output_dir))
 
     # 清理
-    del pipe, peft_model, unet
+    del pipe
+    if "peft_model" in locals():
+        del peft_model
+    if "unet" in locals():
+        del unet
     gc.collect()
 
     logger.info("合并完成")
