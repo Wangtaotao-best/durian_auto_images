@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import './App.css';
 import Hero from './sections/Hero';
+import Generator from './sections/Generator';
 import TechStack from './sections/TechStack';
 import Workflow from './sections/Workflow';
 import DurianGallery from './sections/DurianGallery';
@@ -19,6 +20,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white overflow-x-hidden">
       <Hero />
+      <Generator />
       <TechStack />
       <Workflow />
       <DurianGallery />

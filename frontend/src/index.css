@@ -72,7 +72,7 @@
     @apply border-border;
   }
   body {
-    @apply font-body bg-durian-cream text-durian-thorn;
+    @apply font-body bg-slate-950 text-slate-100;
   }
   h1, h2, h3, h4 {
     @apply font-display;
