@@ -1,0 +1,25 @@
+# 注意: PyTorch 不在此文件,需先单独装 nightly 版以支持 RTX 5070 Blackwell (sm_120)
+# 实际命令: pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128
+
+# Stable Diffusion 生态
+diffusers>=0.30.0
+transformers>=4.44.0
+accelerate>=0.33.0
+peft>=0.12.0
+safetensors>=0.4.0
+
+# 数据处理
+Pillow>=10.0.0
+opencv-python>=4.10.0
+imagehash>=4.3.1
+numpy>=1.26.0
+tqdm>=4.66.0
+
+# 数据采集
+icrawler>=0.6.7
+
+# 工具
+omegaconf>=2.3.0
+tensorboard>=2.17.0
+pyyaml>=6.0
+pytest>=8.0.0
