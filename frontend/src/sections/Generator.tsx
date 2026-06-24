@@ -14,7 +14,56 @@ import type { Variety } from '@/api/types'
 import { useGeneration } from '@/hooks/useGeneration'
 
 /**
- * 在线生成器 — 嵌在 Hero 与 TechStack 之间,作为"立即试用"区。
+ * 场景模板 — 基于训练集真实场景设计
+ * cn: 按钮上的短中文标签
+ * cn_full: 详细中文翻译(用作参考提示)
+ * en: 实际送给 SD1.5 的英文 prompt
+ */
+const SCENE_TEMPLATES = [
+  {
+    cn: '桌面整果',
+    cn_full: '木桌上整颗榴莲,柔和自然光,逼真',
+    en: 'on a wooden table, soft natural light, photorealistic',
+  },
+  {
+    cn: '白底特写',
+    cn_full: '白色背景特写,工作室灯光',
+    en: 'close up shot on a white surface, studio lighting',
+  },
+  {
+    cn: '切开果肉',
+    cn_full: '切开露出黄色果肉,特写,纹理细节',
+    en: 'cut open showing yellow flesh, close up, detailed texture',
+  },
+  {
+    cn: '砧板剖面',
+    cn_full: '砧板上剖开,果肉裸露',
+    en: 'on a cutting board, cut open, exposed flesh',
+  },
+  {
+    cn: '手持展示',
+    cn_full: '一个人手持榴莲,市场场景',
+    en: 'a person holding the durian fruit, market scene',
+  },
+  {
+    cn: '纸箱陈列',
+    cn_full: '纸箱中多颗榴莲,市场陈列',
+    en: 'in a cardboard box, multiple fruits, market display',
+  },
+  {
+    cn: '厨房台面',
+    cn_full: '厨房台面上,室内灯光,逼真',
+    en: 'on a kitchen counter, indoor lighting, photorealistic',
+  },
+  {
+    cn: '户外摊位',
+    cn_full: '户外市场摊位,日光,生活照',
+    en: 'at an outdoor market stall, daylight, casual photo',
+  },
+]
+
+/**
+ * 在线生成器 — 嵌在 Hero 之后,作为"立即使用"区。
  * 沿用项目深色 slate 主题,与现有展示页风格协调。
  */
 const Generator = () => {
@@ -70,7 +119,7 @@ const Generator = () => {
   return (
     <section
       id="generator"
-      className="relative py-24 px-4 overflow-hidden"
+      className="relative scroll-mt-8 py-20 md:py-24 px-4 overflow-hidden"
     >
       {/* 背景层(融入整体深色主题,加点暖色透明斑) */}
       <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900" />
@@ -85,7 +134,7 @@ const Generator = () => {
             className="mb-4 border-amber-500/40 text-amber-300 bg-amber-500/10"
           >
             <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-            在线试用
+            在线使用
           </Badge>
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             <span className="bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
@@ -170,13 +219,51 @@ const Generator = () => {
           <label className="block text-sm font-medium text-slate-300 mb-3">
             描述场景
           </label>
+
+          {/* 场景模板(点击填入英文 prompt) */}
+          <div className="mb-3">
+            <div className="text-xs text-slate-500 mb-2">点击下方场景快速填入(可继续编辑):</div>
+            <div className="flex flex-wrap gap-2">
+              {SCENE_TEMPLATES.map((t) => {
+                const active = prompt.trim() === t.en
+                return (
+                  <button
+                    key={t.cn}
+                    type="button"
+                    onClick={() => setPrompt(t.en)}
+                    title={t.en}
+                    className={[
+                      'px-3 py-1.5 rounded-full text-xs transition-all border',
+                      active
+                        ? 'bg-amber-500/20 border-amber-400/60 text-amber-200'
+                        : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:bg-slate-800/80 hover:border-slate-600',
+                    ].join(' ')}
+                  >
+                    {t.cn}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="e.g. cut open, exposed yellow flesh, studio lighting"
+            placeholder="点击上方场景填入,或自己输入英文描述(模型只懂英文)"
             rows={3}
             className="w-full px-4 py-3 rounded-xl bg-slate-900/60 border border-slate-700/60 focus:outline-none focus:border-amber-400/60 focus:ring-1 focus:ring-amber-400/40 text-slate-100 placeholder:text-slate-500 resize-none"
           />
+
+          {/* 当前 prompt 的中文翻译参考(若匹配某个模板)*/}
+          {(() => {
+            const matched = SCENE_TEMPLATES.find((t) => t.en === prompt.trim())
+            if (!matched) return null
+            return (
+              <div className="mt-2 text-xs text-slate-500">
+                <span className="text-slate-600">💬 中文参考:</span> {matched.cn_full}
+              </div>
+            )
+          })()}
 
           {/* 高级选项 */}
           <button
