@@ -21,15 +21,32 @@ _paths = load_paths()
 _varieties = load_varieties()
 _serve_defaults = load_serve_defaults()
 
-# 服务器端模型根目录(覆盖路径,优先用环境变量)
-MODELS_ROOT = Path(os.environ.get("DURIAN_OV_MODELS_ROOT", _paths["models_openvino"]))
+# Backend 模式: openvino (CPU 服务器) 或 lora (本地 GPU 验证)
+BACKEND_MODE = os.environ.get("DURIAN_BACKEND_MODE", "openvino").lower()
+
+# 模型根目录:lora 模式默认指向 models/lora,openvino 模式默认指向 models/openvino
+if BACKEND_MODE == "lora":
+    _default_root = _paths["models_lora"]
+    _root_env = "DURIAN_LORA_MODELS_ROOT"
+else:
+    _default_root = _paths["models_openvino"]
+    _root_env = "DURIAN_OV_MODELS_ROOT"
+
+MODELS_ROOT = Path(os.environ.get(_root_env, _default_root))
 IMAGES_ROOT = Path(os.environ.get("DURIAN_IMAGES_ROOT", _paths["outputs"] / "_serve"))
 
 
 class PipelineProvider:
     """把 PipelineRegistry 适配成 queue 需要的 generate_for_params 接口"""
-    def __init__(self, registry: PipelineRegistry):
+    def __init__(self, registry: PipelineRegistry, mode: str):
         self.registry = registry
+        # LoRA 模式默认 30 步 / cfg 7.5;OpenVINO+LCM 模式默认 6 步 / cfg 1.5
+        if mode == "lora":
+            self.default_steps = 30
+            self.default_cfg = 7.5
+        else:
+            self.default_steps = 6
+            self.default_cfg = 1.5
 
     def generate_for_params(self, params: dict, progress_cb):
         inferencer = self.registry.get(params["variety"])
@@ -37,8 +54,8 @@ class PipelineProvider:
             prompt=params["prompt"],
             negative_prompt=params.get("negative_prompt", ""),
             num_images=params.get("num_images", 1),
-            steps=params.get("steps", 6),
-            cfg=params.get("cfg_scale", 1.5),
+            steps=params.get("steps") or self.default_steps,
+            cfg=params.get("cfg_scale") or self.default_cfg,
             width=params.get("width", 512),
             height=params.get("height", 512),
             seed=params.get("seed", -1),
@@ -46,15 +63,15 @@ class PipelineProvider:
         )
 
 
-registry = PipelineRegistry(MODELS_ROOT, max_loaded=1)
-provider = PipelineProvider(registry)
+registry = PipelineRegistry(MODELS_ROOT, max_loaded=1, mode=BACKEND_MODE)
+provider = PipelineProvider(registry, mode=BACKEND_MODE)
 queue = TaskQueue(provider)
 store = ImageStore(IMAGES_ROOT)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info(f"OpenVINO models root: {MODELS_ROOT}")
+    logger.info(f"Backend mode: {BACKEND_MODE} | models root: {MODELS_ROOT}")
     logger.info(f"可用品种: {registry.available_varieties()}")
     queue.start()
     yield
