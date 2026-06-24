@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Sparkles, Database, Brain, Image } from 'lucide-react';
+import { Sparkles, Brain, Database, Image as ImageIcon, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Hero = () => {
@@ -12,7 +12,6 @@ const Hero = () => {
       const particles = particlesRef.current.querySelectorAll('.particle');
       const mouseX = e.clientX / window.innerWidth;
       const mouseY = e.clientY / window.innerHeight;
-
       particles.forEach((particle, index) => {
         const speed = (index + 1) * 0.5;
         const x = (mouseX - 0.5) * speed * 20;
@@ -20,26 +19,22 @@ const Hero = () => {
         (particle as HTMLElement).style.transform = `translate(${x}px, ${y}px)`;
       });
     };
-
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
+  const scrollToGenerator = () => {
+    document.getElementById('generator')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
-    <section 
+    <section
       ref={heroRef}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+      className="relative min-h-[80vh] flex items-center justify-center overflow-hidden pt-12 pb-20"
     >
       {/* Animated Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-violet-950/30 via-slate-950 to-emerald-950/20" />
-      
+
       {/* Floating Particles */}
       <div ref={particlesRef} className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(20)].map((_, i) => (
@@ -57,7 +52,7 @@ const Hero = () => {
       </div>
 
       {/* Grid Pattern */}
-      <div 
+      <div
         className="absolute inset-0 opacity-[0.03]"
         style={{
           backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
@@ -81,61 +76,60 @@ const Hero = () => {
           </span>
           <br />
           <span className="bg-gradient-to-r from-emerald-400 via-violet-400 to-purple-400 bg-clip-text text-transparent">
-            数据集生成平台
+            生成平台
           </span>
         </h1>
 
         {/* Subtitle */}
-        <p className="text-lg sm:text-xl text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed">
-          基于 Stable Diffusion + LoRA + ControlNet 技术栈，
+        <p className="text-lg sm:text-xl text-slate-400 max-w-3xl mx-auto mb-10 leading-relaxed">
+          基于 Stable Diffusion + LoRA 技术栈,
           <br className="hidden sm:block" />
-          从小样本真实图像生成高质量、多样化的榴莲品种训练数据集
+          浏览器内一键生成猫山王 / 金枕头 / 黑刺王三种榴莲图像
         </p>
 
-        {/* Feature Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-12">
+        {/* Tech chip strip(简化版,代替之前 4 个大卡片) */}
+        <div className="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto mb-10">
           {[
-            { icon: Brain, label: 'Stable Diffusion', desc: '核心生成引擎' },
-            { icon: Database, label: 'LoRA 微调', desc: '参数高效训练' },
-            { icon: Image, label: 'ControlNet', desc: '精确控制生成' },
-            { icon: Sparkles, label: '数据增强', desc: '智能扩充数据集' },
+            { icon: Brain, label: 'Stable Diffusion 1.5' },
+            { icon: Database, label: 'LoRA 微调' },
+            { icon: Sparkles, label: 'OpenVINO 加速' },
+            { icon: ImageIcon, label: 'CPU 部署' },
           ].map((item, index) => (
-            <div
+            <span
               key={index}
-              className="group p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-violet-500/50 hover:bg-slate-800/80 transition-all duration-300"
-              style={{ animationDelay: `${index * 100}ms` }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-800/60 border border-slate-700/60 text-xs text-slate-300"
             >
-              <item.icon className="w-8 h-8 mx-auto mb-3 text-violet-400 group-hover:scale-110 transition-transform" />
-              <h3 className="text-sm font-semibold text-white mb-1">{item.label}</h3>
-              <p className="text-xs text-slate-400">{item.desc}</p>
-            </div>
+              <item.icon className="w-3.5 h-3.5 text-violet-400" />
+              {item.label}
+            </span>
           ))}
         </div>
 
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        {/* CTA */}
+        <div className="flex justify-center">
           <Button
             size="lg"
-            onClick={() => scrollToSection('gallery')}
-            className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white px-8 py-6 text-lg rounded-xl shadow-lg shadow-violet-500/25 transition-all hover:scale-105"
+            onClick={scrollToGenerator}
+            className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white px-10 py-6 text-lg rounded-xl shadow-lg shadow-violet-500/25 transition-all hover:scale-105"
           >
-            <Image className="w-5 h-5 mr-2" />
-            查看生成样本
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            onClick={() => scrollToSection('tech-stack')}
-            className="border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white px-8 py-6 text-lg rounded-xl transition-all"
-          >
-            <Brain className="w-5 h-5 mr-2" />
-            了解技术方案
+            <Sparkles className="w-5 h-5 mr-2" />
+            开始生成
           </Button>
         </div>
+
+        {/* 向下箭头提示 */}
+        <button
+          onClick={scrollToGenerator}
+          aria-label="scroll to generator"
+          className="mt-12 inline-flex flex-col items-center gap-1 text-slate-500 hover:text-slate-300 transition-colors animate-bounce-slow"
+        >
+          <span className="text-xs">向下使用</span>
+          <ChevronDown className="w-5 h-5" />
+        </button>
       </div>
 
-      {/* Bottom Gradient */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-950 to-transparent" />
+      {/* Bottom Gradient(平滑过渡到 Generator) */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-950 to-transparent pointer-events-none" />
 
       <style>{`
         @keyframes float {
@@ -148,6 +142,13 @@ const Hero = () => {
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(6px); }
+        }
+        .animate-bounce-slow {
+          animation: bounce-slow 2s ease-in-out infinite;
         }
       `}</style>
     </section>
