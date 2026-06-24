@@ -105,7 +105,7 @@ MODELS_DIR=/tmp/durian_bundles bash scripts/deploy_to_server.sh
 1. 检查 Docker
 2. 创建 `<DEPLOY_PATH>/models/openvino/`
 3. 解压 3 个包到那里(各占 ~2.2GB,合计 ~6.5GB 磁盘)
-4. 写 `.env`(端口 8000、自动检测 CPU 核数)
+4. 写 `.env`(端口 8008、自动检测 CPU 核数)
 5. `docker compose up -d --build` 构建镜像 + 启动容器
 
 **首次构建** Docker 镜像约 **10-20 分钟**(主要时间在 pip install)。
@@ -129,17 +129,17 @@ docker compose ps
 ### 4.2 API 健康检查
 
 ```bash
-curl http://localhost:8000/api/health
+curl http://localhost:8008/api/health
 # {"status":"ok","varieties":["blackthorn","monthong","musang_king"]}
 
-curl http://localhost:8000/api/varieties
+curl http://localhost:8008/api/varieties
 # [{"id":"blackthorn",...},{"id":"monthong",...},{"id":"musang_king",...}]
 ```
 
 ### 4.3 浏览器访问(从你的电脑)
 
 ```
-http://<SERVER>:8000
+http://<SERVER>:8008
 ```
 
 会看到 Hero(深色页) + 在线使用 区域(三个品种 + 中文场景模板)。
@@ -165,24 +165,24 @@ http://<SERVER>:8000
 ```bash
 # Ubuntu/Debian
 sudo ufw status
-sudo ufw allow 8000/tcp
+sudo ufw allow 8008/tcp
 sudo ufw reload
 
 # CentOS/RHEL
-sudo firewall-cmd --add-port=8000/tcp --permanent
+sudo firewall-cmd --add-port=8008/tcp --permanent
 sudo firewall-cmd --reload
 ```
 
 ### 5.2 云服务器额外要做
 
 如果服务器在云上(阿里云/腾讯云/AWS 等),要在云控制台的**安全组**里:
-- 入站规则添加 TCP **8000** 端口 0.0.0.0/0(允许任意 IP 访问)
+- 入站规则添加 TCP **8008** 端口 0.0.0.0/0(允许任意 IP 访问)
 
 ### 5.3 公网 IP 测试
 
 如果服务器有公网 IP,在你家电脑/手机用 4G 网络试:
 ```
-http://<PUBLIC_IP>:8000
+http://<PUBLIC_IP>:8008
 ```
 如果连不上 → 安全组或防火墙没开。
 
@@ -283,13 +283,13 @@ RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 
 ## ✅ 部署完成的最终检查
 
-- [ ] `curl http://<SERVER>:8000/api/health` 返回 `{"status":"ok","varieties":["blackthorn","monthong","musang_king"]}`
-- [ ] 浏览器 `http://<SERVER>:8000` 看到完整页面(Hero + Generator + footer)
+- [ ] `curl http://<SERVER>:8008/api/health` 返回 `{"status":"ok","varieties":["blackthorn","monthong","musang_king"]}`
+- [ ] 浏览器 `http://<SERVER>:8008` 看到完整页面(Hero + Generator + footer)
 - [ ] 三个品种卡片都能选
 - [ ] 点击场景模板能填入英文 prompt
 - [ ] 实际 Generate 一张,8-15 秒内出图
 - [ ] `docker compose ps` 显示 healthy
-- [ ] 防火墙 8000 已开
+- [ ] 防火墙 8008 已开
 
 ---
 

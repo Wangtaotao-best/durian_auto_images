@@ -74,10 +74,11 @@ if [ ! -f "$DEPLOY_ROOT/.env" ]; then
     # 自动检测物理核数
     CORES=$(nproc 2>/dev/null || echo 8)
     cat > "$DEPLOY_ROOT/.env" <<EOF
-DURIAN_PORT=8000
+# 宿主机端口(默认 8008,因为 8000 常被占用)
+DURIAN_PORT=8008
 OMP_NUM_THREADS=$CORES
 EOF
-    echo "    已创建 $DEPLOY_ROOT/.env (OMP_NUM_THREADS=$CORES)"
+    echo "    已创建 $DEPLOY_ROOT/.env (DURIAN_PORT=8008, OMP_NUM_THREADS=$CORES)"
 else
     echo "    已存在 $DEPLOY_ROOT/.env, 跳过"
     cat "$DEPLOY_ROOT/.env"
@@ -92,11 +93,12 @@ echo "==> 完成! 检查容器状态:"
 docker compose ps
 
 IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "<server-ip>")
+PORT=$(grep -E '^DURIAN_PORT=' "$DEPLOY_ROOT/.env" | cut -d= -f2 || echo 8008)
 echo ""
 echo "============================================================"
-echo "  访问: http://$IP:8000"
-echo "  健康检查: curl http://$IP:8000/api/health"
-echo "  品种列表: curl http://$IP:8000/api/varieties"
+echo "  访问: http://$IP:$PORT"
+echo "  健康检查: curl http://$IP:$PORT/api/health"
+echo "  品种列表: curl http://$IP:$PORT/api/varieties"
 echo "  查看日志: docker compose logs -f durian-api"
 echo "  停止服务: docker compose down"
 echo "============================================================"
