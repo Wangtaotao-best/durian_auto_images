@@ -40,15 +40,10 @@ if ($LASTEXITCODE -ne 0) { throw "Step 3 failed" }
 
 Write-Host "==> [4/4] 打包 tar.gz" -ForegroundColor Cyan
 $bundle = "$DataRoot/${Variety}_openvino.tar.gz"
-$tarBin = (Get-Command tar -ErrorAction SilentlyContinue).Source
-if (-not $tarBin) {
-    # Fallback to git-bash tar
-    $tarBin = "C:/Program Files/Git/usr/bin/tar.exe"
-}
-if (-not (Test-Path $tarBin)) {
-    # Another common location
-    $tarBin = "C:/ProgramData/Git/usr/bin/tar.exe"
-}
+# 优先用 Windows 自带 tar (System32),它支持 Windows 盘符;避免 Git Bash 的 /usr/bin/tar
+$winTar = "$env:SystemRoot/System32/tar.exe"
+$tarBin = if (Test-Path $winTar) { $winTar } else { (Get-Command tar -ErrorAction SilentlyContinue).Source }
+if (-not $tarBin) { throw "tar.exe not found" }
 & $tarBin -czf $bundle -C "$DataRoot/models/openvino" $Variety
 if ($LASTEXITCODE -ne 0) { throw "Step 4 failed" }
 
