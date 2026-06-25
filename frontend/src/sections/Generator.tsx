@@ -32,7 +32,9 @@ const Generator = () => {
   const [varietiesError, setVarietiesError] = useState<string | null>(null)
   const [selectedVariety, setSelectedVariety] = useState<string>('')
 
-  const [negative, setNegative] = useState('blurry, low quality, distorted, deformed')
+  const [negative, setNegative] = useState(
+    'blurry, low quality, distorted, deformed, black image, black background, dark, underexposed, empty image',
+  )
   const [steps, setSteps] = useState(6)
   const [cfg, setCfg] = useState(1.5)
   const [num, setNum] = useState(2)
@@ -389,6 +391,41 @@ const ProgressPanel = ({ status }: { status: import('@/api/types').TaskStatus })
   return null
 }
 
+const GeneratedImageCard = ({ url, index }: { url: string; index: number }) => {
+  const [failed, setFailed] = useState(false)
+
+  return (
+    <div className="group relative rounded-2xl overflow-hidden bg-slate-800/40 backdrop-blur-md border border-slate-700/50 shadow-lg">
+      {failed ? (
+        <div className="flex aspect-square w-full flex-col items-center justify-center gap-3 bg-slate-900/70 px-4 text-center text-slate-400">
+          <ImageOff className="h-8 w-8 text-slate-500" />
+          <div>
+            <div className="text-sm font-medium text-slate-300">图片加载失败</div>
+            <div className="mt-1 text-xs text-slate-500">
+              可以刷新页面或重新生成一次
+            </div>
+          </div>
+        </div>
+      ) : (
+        <img
+          src={url}
+          alt={`生成结果 ${index + 1}`}
+          onError={() => setFailed(true)}
+          className="w-full aspect-square object-cover bg-slate-900/60"
+        />
+      )}
+      <a
+        href={url}
+        download={`durian_${index + 1}.png`}
+        className="absolute bottom-3 right-3 p-2.5 rounded-full bg-slate-900/90 text-amber-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-900 hover:scale-110"
+        aria-label="下载"
+      >
+        <Download className="w-4 h-4" />
+      </a>
+    </div>
+  )
+}
+
 const ResultGrid = ({ imageUrls }: { imageUrls: string[] }) => {
   if (!imageUrls.length) return null
   const cols =
@@ -400,24 +437,7 @@ const ResultGrid = ({ imageUrls }: { imageUrls: string[] }) => {
   return (
     <div className={`grid ${cols} gap-4`}>
       {imageUrls.map((url, i) => (
-        <div
-          key={i}
-          className="group relative rounded-2xl overflow-hidden bg-slate-800/40 backdrop-blur-md border border-slate-700/50 shadow-lg"
-        >
-          <img
-            src={url}
-            alt={`Generated ${i}`}
-            className="w-full aspect-square object-cover"
-          />
-          <a
-            href={url}
-            download={`durian_${Date.now()}_${i}.png`}
-            className="absolute bottom-3 right-3 p-2.5 rounded-full bg-slate-900/90 text-amber-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-900 hover:scale-110"
-            aria-label="下载"
-          >
-            <Download className="w-4 h-4" />
-          </a>
-        </div>
+        <GeneratedImageCard key={`${url}-${i}`} url={url} index={i} />
       ))}
     </div>
   )
