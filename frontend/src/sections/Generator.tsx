@@ -13,54 +13,14 @@ import { api } from '@/api/client'
 import type { Variety } from '@/api/types'
 import { useGeneration } from '@/hooks/useGeneration'
 
-/**
- * 场景模板 — 基于训练集真实场景设计
- * cn: 按钮上的短中文标签
- * cn_full: 详细中文翻译(用作参考提示)
- * en: 实际送给 SD1.5 的英文 prompt
- */
-const SCENE_TEMPLATES = [
-  {
-    cn: '桌面整果',
-    cn_full: '木桌上整颗榴莲,柔和自然光,逼真',
-    en: 'on a wooden table, soft natural light, photorealistic',
-  },
-  {
-    cn: '白底特写',
-    cn_full: '白色背景特写,工作室灯光',
-    en: 'close up shot on a white surface, studio lighting',
-  },
-  {
-    cn: '切开果肉',
-    cn_full: '切开露出黄色果肉,特写,纹理细节',
-    en: 'cut open showing yellow flesh, close up, detailed texture',
-  },
-  {
-    cn: '砧板剖面',
-    cn_full: '砧板上剖开,果肉裸露',
-    en: 'on a cutting board, cut open, exposed flesh',
-  },
-  {
-    cn: '手持展示',
-    cn_full: '一个人手持榴莲,市场场景',
-    en: 'a person holding the durian fruit, market scene',
-  },
-  {
-    cn: '纸箱陈列',
-    cn_full: '纸箱中多颗榴莲,市场陈列',
-    en: 'in a cardboard box, multiple fruits, market display',
-  },
-  {
-    cn: '厨房台面',
-    cn_full: '厨房台面上,室内灯光,逼真',
-    en: 'on a kitchen counter, indoor lighting, photorealistic',
-  },
-  {
-    cn: '户外摊位',
-    cn_full: '户外市场摊位,日光,生活照',
-    en: 'at an outdoor market stall, daylight, casual photo',
-  },
-]
+const FIXED_PROMPT =
+  'close up shot of durian on a white background, studio lighting, sharp details, photorealistic'
+
+const FIXED_SCENE = {
+  title: '白底特写',
+  subtitle: '白色背景 · 工作室灯光 · 清晰细节',
+  description: '已根据训练集固定场景,提升生成稳定性',
+}
 
 /**
  * 在线生成器 — 嵌在 Hero 之后,作为"立即使用"区。
@@ -72,9 +32,6 @@ const Generator = () => {
   const [varietiesError, setVarietiesError] = useState<string | null>(null)
   const [selectedVariety, setSelectedVariety] = useState<string>('')
 
-  const [prompt, setPrompt] = useState(
-    'on a wooden table, soft natural light, photorealistic',
-  )
   const [negative, setNegative] = useState('blurry, low quality, distorted, deformed')
   const [steps, setSteps] = useState(6)
   const [cfg, setCfg] = useState(1.5)
@@ -101,14 +58,13 @@ const Generator = () => {
     }
   }, [status?.status])
 
-  const canGenerate =
-    !isRunning && Boolean(selectedVariety) && prompt.trim().length > 0
+  const canGenerate = !isRunning && Boolean(selectedVariety)
 
   const handleGenerate = () => {
     if (!canGenerate) return
     start({
       variety: selectedVariety,
-      prompt: prompt.trim(),
+      prompt: FIXED_PROMPT,
       negative_prompt: negative.trim() || undefined,
       num_images: num,
       steps,
@@ -214,56 +170,35 @@ const Generator = () => {
           )}
         </div>
 
-        {/* Prompt 输入 */}
+        {/* 固定生成场景 */}
         <div className="rounded-2xl p-6 backdrop-blur-md bg-slate-800/40 border border-slate-700/50 mb-6">
           <label className="block text-sm font-medium text-slate-300 mb-3">
-            描述场景
+            生成场景
           </label>
 
-          {/* 场景模板(点击填入英文 prompt) */}
-          <div className="mb-3">
-            <div className="text-xs text-slate-500 mb-2">点击下方场景快速填入(可继续编辑):</div>
-            <div className="flex flex-wrap gap-2">
-              {SCENE_TEMPLATES.map((t) => {
-                const active = prompt.trim() === t.en
-                return (
-                  <button
-                    key={t.cn}
-                    type="button"
-                    onClick={() => setPrompt(t.en)}
-                    title={t.en}
-                    className={[
-                      'px-3 py-1.5 rounded-full text-xs transition-all border',
-                      active
-                        ? 'bg-amber-500/20 border-amber-400/60 text-amber-200'
-                        : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:bg-slate-800/80 hover:border-slate-600',
-                    ].join(' ')}
-                  >
-                    {t.cn}
-                  </button>
-                )
-              })}
+          <div className="rounded-2xl border border-amber-400/40 bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-slate-900/40 p-5 shadow-lg shadow-amber-500/10">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-yellow-500 text-slate-950 shadow-lg shadow-amber-500/30">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-lg font-bold text-amber-100">
+                    {FIXED_SCENE.title}
+                  </h3>
+                  <span className="rounded-full border border-amber-300/40 bg-amber-300/10 px-2.5 py-0.5 text-[11px] font-medium text-amber-200">
+                    固定推荐
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-slate-300">
+                  {FIXED_SCENE.subtitle}
+                </p>
+                <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                  {FIXED_SCENE.description}
+                </p>
+              </div>
             </div>
           </div>
-
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="点击上方场景填入,或自己输入英文描述(模型只懂英文)"
-            rows={3}
-            className="w-full px-4 py-3 rounded-xl bg-slate-900/60 border border-slate-700/60 focus:outline-none focus:border-amber-400/60 focus:ring-1 focus:ring-amber-400/40 text-slate-100 placeholder:text-slate-500 resize-none"
-          />
-
-          {/* 当前 prompt 的中文翻译参考(若匹配某个模板)*/}
-          {(() => {
-            const matched = SCENE_TEMPLATES.find((t) => t.en === prompt.trim())
-            if (!matched) return null
-            return (
-              <div className="mt-2 text-xs text-slate-500">
-                <span className="text-slate-600">💬 中文参考:</span> {matched.cn_full}
-              </div>
-            )
-          })()}
 
           {/* 高级选项 */}
           <button
@@ -338,7 +273,7 @@ const Generator = () => {
             ) : (
               <>
                 <Sparkles className="w-5 h-5 mr-2" />
-                Generate
+                开始生成
               </>
             )}
           </Button>

@@ -69,6 +69,7 @@ docker compose logs -f --tail 100 durian-api
 - [x] **2026-06-24** 部署脚本前 4 步成功(目录、解压、.env 生成、端口 8008 就位)
 - [x] **2026-06-25** 服务器容器已启动,`/api/health` 和 `/api/varieties` 正常返回 3 品种
 - [x] **2026-06-25** 前端 footer 调整:移除「仅供学术演示」与 GitHub 链接,增加「开发人: 寒鸣」
+- [x] **2026-06-25** 生成器场景固定为白底特写:隐藏英文 prompt,按钮改为「开始生成」,减少与训练集不一致导致的不稳定
 - [ ] **2026-06-25** 服务器生成失败修复中:`OVStableDiffusionPipeline`/`NNCFConfig` 依赖链待无缓存重建验证
 
 ## 关键产物路径
@@ -109,7 +110,7 @@ docker compose logs -f --tail 100 durian-api
 
 - [ ] **服务器首件**:上传/覆盖 `backend/requirements-serve.txt` 与 `backend/Dockerfile`,执行 `docker compose build --no-cache durian-api`,确认出现 `OK: OVStableDiffusionPipeline`
 - [ ] 构建成功后启动容器,网页实际生成 1 张图验证
-- [ ] 如果生成成功,重新构建/上传新版 `frontend/dist/`,让 footer 显示「开发人: 寒鸣」且不显示 GitHub
+- [ ] 如果生成成功,重新构建/上传新版 `frontend/dist/`,让 footer 显示「开发人: 寒鸣」且不显示 GitHub,生成器只显示固定「白底特写」场景
 - [ ] 开防火墙 8008 + 云控制台安全组(若公网仍无法访问)
 - [ ] 浏览器从公网 IP 测试出图
 - [ ] (可选)清理 `/var/lib/docker.old.bak` 备份(确认稳定 1 周后)
