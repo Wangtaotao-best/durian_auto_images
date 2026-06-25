@@ -1,6 +1,48 @@
 # PROGRESS — 榴莲 AIGC 项目
 
-> 本文件用于跨会话快速恢复上下文。最新更新:2026-06-24
+> 本文件用于跨会话快速恢复上下文。最新更新:2026-06-25
+
+## 🚨 当前部署断点(服务器生成失败修复中)
+
+**当前状态**:
+- ✅ 服务器 Docker 服务已启动过,`/api/health` 和 `/api/varieties` 正常返回 3 个品种
+- ✅ 端口映射正常:`0.0.0.0:8008->8000/tcp`
+- ❌ 网页点击生成失败,原因是 OpenVINO Diffusers 依赖链 import 崩溃
+- ✅ 本地已修改 `backend/requirements-serve.txt`:锁定服务端依赖版本,并新增 `nncf==2.14.1`
+- ✅ 本地已修改 `backend/Dockerfile`:加入清华 PyPI 源参数 + 构建期 `OVStableDiffusionPipeline` import 自检
+- ⏭ 服务器尚需重新上传/覆盖上述文件并 `docker compose build --no-cache durian-api` 验证
+
+**已遇到的服务器错误链**:
+1. Docker Hub 超时:`python:3.11-slim` pull 超时 → 通过 Docker registry mirror 解决
+2. 生成时 import 失败:`Could not import module 'OVStableDiffusionPipeline'`
+3. 依赖冲突:`openvino==2024.4.0` 与 `optimum-intel[openvino]==1.20.0` 冲突 → 移除单独 openvino pin
+4. 最新构建期失败:`cannot import name 'NNCFConfig' from 'nncf'` → 本地已新增 `nncf==2.14.1`,待服务器重建验证
+
+**服务器下一步命令**:
+
+```bash
+cd /opt/durian
+
+# 确认/覆盖 backend/requirements-serve.txt 为本地最新版后执行:
+docker compose build --no-cache durian-api 2>&1 | tee build.log
+
+# 构建成功的关键标志:
+# OK: OVStableDiffusionPipeline
+
+# 成功后启动:
+docker compose up -d
+docker compose ps
+curl http://localhost:8008/api/health
+curl http://localhost:8008/api/varieties
+
+# 再从网页点一次生成,同时看日志:
+docker compose logs -f --tail 100 durian-api
+```
+
+**如果继续失败**:发服务器 `tail -80 build.log` 或生成时 `docker compose logs --tail 120 durian-api`。
+
+---
+
 
 ## 当前状态
 
@@ -19,6 +61,15 @@
 - [x] **M5** 前端 `Generator` section 嵌入(保留现有深色展示页)+ Docker 配置 + 部署脚本
 - [x] **2026-06-24** 用户自有数据集训练 3 品种 LoRA(共 149 张图)
 - [x] **2026-06-24** 后端添加 `DURIAN_BACKEND_MODE=lora` 分支,支持本地 GPU LoRA 直跑(浏览器端到端验证 ✅)
+- [x] **2026-06-24** 前端 v0.3.0:移除 Workflow/DurianGallery/DatasetStats/Footer 装饰板块、改中文 8 个场景模板、按钮文字调整
+- [x] **2026-06-24** GitHub 仓库初始化并推送(`Wangtaotao-best/durian_auto_images`)
+- [x] **2026-06-24** 3 品种导出 OpenVINO IR + 打包(各 ~2.15 GB)
+- [x] **2026-06-24** 3 个 tar.gz 上传到服务器 `/opt/durian_bundles/`
+- [x] **2026-06-24** Docker 数据迁移到 `/opt/docker-data`(/ 分区 100% → 355 GB 可用)
+- [x] **2026-06-24** 部署脚本前 4 步成功(目录、解压、.env 生成、端口 8008 就位)
+- [x] **2026-06-25** 服务器容器已启动,`/api/health` 和 `/api/varieties` 正常返回 3 品种
+- [x] **2026-06-25** 前端 footer 调整:移除「仅供学术演示」与 GitHub 链接,增加「开发人: 寒鸣」
+- [ ] **2026-06-25** 服务器生成失败修复中:`OVStableDiffusionPipeline`/`NNCFConfig` 依赖链待无缓存重建验证
 
 ## 关键产物路径
 
@@ -56,9 +107,12 @@
 
 ## 待办
 
-- [ ] 把新训的 3 品种 LoRA 导出为 OpenVINO IR(每品种 ~6 分钟,共 ~20 分钟)
-  - 命令:`powershell scripts/build_serve_bundle.ps1 -Variety {blackthorn,monthong,musang_king}`
-- [ ] 上传 3 个 tar.gz 到服务器 + 跑 `scripts/deploy_to_server.sh`
+- [ ] **服务器首件**:上传/覆盖 `backend/requirements-serve.txt` 与 `backend/Dockerfile`,执行 `docker compose build --no-cache durian-api`,确认出现 `OK: OVStableDiffusionPipeline`
+- [ ] 构建成功后启动容器,网页实际生成 1 张图验证
+- [ ] 如果生成成功,重新构建/上传新版 `frontend/dist/`,让 footer 显示「开发人: 寒鸣」且不显示 GitHub
+- [ ] 开防火墙 8008 + 云控制台安全组(若公网仍无法访问)
+- [ ] 浏览器从公网 IP 测试出图
+- [ ] (可选)清理 `/var/lib/docker.old.bak` 备份(确认稳定 1 周后)
 - [ ] (可选)改造 DurianGallery / DatasetStats 显示真实数据
 - [ ] (可选)前端展示页其它板块(Hero/Workflow/TechStack)按真实情况调整文案
 

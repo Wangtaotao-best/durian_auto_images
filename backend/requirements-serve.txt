@@ -1,23 +1,36 @@
 # PyTorch CPU 版在服务器上单独装: pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision
+#
+# 注意:生产镜像必须锁版本。这里如果用 >= 会在重建时拉到过新的
+# diffusers / transformers / optimum-intel 组合,容易触发:
+#   Could not import module 'OVStableDiffusionPipeline'
+#   Are this object's requirements defined correctly?
+#
+# 不要在这里单独固定 openvino==2024.4.0。
+# optimum-intel[openvino]==1.20.0 会要求自己的 OpenVINO 版本
+# (当前解析为 openvino==2024.4.1.dev20240926),否则 pip 会 ResolutionImpossible。
 
 # Web 框架
-fastapi>=0.115.0
-uvicorn[standard]>=0.30.0
-pydantic>=2.8.0
-python-multipart>=0.0.9
-aiofiles>=24.1.0
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+pydantic==2.10.3
+python-multipart==0.0.12
+aiofiles==24.1.0
 
-# 推理引擎 (CPU)
-openvino>=2024.4
-optimum-intel[openvino]>=1.20.0
-diffusers>=0.30.0
-transformers>=4.44.0
+# 推理引擎 (CPU / OpenVINO)
+optimum==1.23.3
+optimum-intel[openvino]==1.20.0
+nncf==2.14.1
+diffusers==0.30.3
+transformers==4.44.2
+accelerate==0.34.2
+huggingface-hub==0.24.7
+safetensors==0.4.5
 
 # 图像
-Pillow>=10.0.0
-numpy>=1.26.0
+Pillow==10.4.0
+numpy==1.26.4
 
 # 工具
-tqdm
-loguru>=0.7.0
-pyyaml>=6.0
+tqdm==4.66.5
+loguru==0.7.2
+pyyaml==6.0.2

@@ -11,6 +11,9 @@ ENV PYTHONUNBUFFERED=1 \
     DURIAN_IMAGES_ROOT=/data/images \
     DURIAN_FRONTEND_DIST=/app/frontend/dist
 
+ARG PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+ARG PIP_TRUSTED_HOST=pypi.tuna.tsinghua.edu.cn
+
 # OpenVINO system libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libgl1 \
@@ -31,6 +34,12 @@ RUN pip install --index-url https://download.pytorch.org/whl/cpu \
 
 COPY backend/requirements-serve.txt /app/requirements-serve.txt
 RUN pip install -r /app/requirements-serve.txt
+
+# Fail fast during image build if the OpenVINO Diffusers class cannot be imported.
+RUN python - <<'PY'
+from optimum.intel import OVStableDiffusionPipeline
+print('OK:', OVStableDiffusionPipeline.__name__)
+PY
 
 # ===== Runtime stage =====
 FROM deps AS runtime
