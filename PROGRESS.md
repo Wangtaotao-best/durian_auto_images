@@ -5,44 +5,47 @@
 ## 🚨 当前部署断点(服务器生成失败修复中)
 
 **当前状态**:
-- ✅ 服务器 Docker 服务已启动过,`/api/health` 和 `/api/varieties` 正常返回 3 个品种
+- ✅ 服务器 Docker 镜像已成功构建:`durian-aigc:latest`
+- ✅ 构建期自检通过:`OK: OVStableDiffusionPipeline`
+- ✅ 容器已成功启动并可生成图片
+- ✅ `/api/health` 和 `/api/varieties` 正常返回 3 个品种
 - ✅ 端口映射正常:`0.0.0.0:8008->8000/tcp`
-- ❌ 网页点击生成失败,原因是 OpenVINO Diffusers 依赖链 import 崩溃
-- ✅ 本地已修改 `backend/requirements-serve.txt`:锁定服务端依赖版本,并新增 `nncf==2.14.1`
-- ✅ 本地已修改 `backend/Dockerfile`:加入清华 PyPI 源参数 + 构建期 `OVStableDiffusionPipeline` import 自检
-- ⏭ 服务器尚需重新上传/覆盖上述文件并 `docker compose build --no-cache durian-api` 验证
+- ✅ OpenVINO Diffusers / optimum-intel / nncf 依赖链已修复并验证
+- ✅ 前端已固定白底特写场景,隐藏英文 prompt,按钮改为「开始生成」
 
-**已遇到的服务器错误链**:
+**已遇到并解决的服务器错误链**:
 1. Docker Hub 超时:`python:3.11-slim` pull 超时 → 通过 Docker registry mirror 解决
 2. 生成时 import 失败:`Could not import module 'OVStableDiffusionPipeline'`
 3. 依赖冲突:`openvino==2024.4.0` 与 `optimum-intel[openvino]==1.20.0` 冲突 → 移除单独 openvino pin
-4. 最新构建期失败:`cannot import name 'NNCFConfig' from 'nncf'` → 本地已新增 `nncf==2.14.1`,待服务器重建验证
+4. 构建期失败:`cannot import name 'NNCFConfig' from 'nncf'` → 新增 `nncf==2.14.1`
+5. Docker BuildKit 导出镜像阶段 EOF → 不加 `--no-cache` 重试构建,利用缓存成功导出镜像
 
-**服务器下一步命令**:
+**服务器已成功运行,后续维护方式**:
 
 ```bash
 cd /opt/durian
 
-# 确认/覆盖 backend/requirements-serve.txt 为本地最新版后执行:
-docker compose build --no-cache durian-api 2>&1 | tee build.log
-
-# 构建成功的关键标志:
-# OK: OVStableDiffusionPipeline
-
-# 成功后启动:
-docker compose up -d
+# 查看状态
 docker compose ps
-curl http://localhost:8008/api/health
-curl http://localhost:8008/api/varieties
 
-# 再从网页点一次生成,同时看日志:
+# 查看日志
 docker compose logs -f --tail 100 durian-api
+
+# 仅重启服务(不重建镜像)
+docker compose restart durian-api
+
+# 停止/启动
+docker compose down
+docker compose up -d
 ```
 
-**如果继续失败**:发服务器 `tail -80 build.log` 或生成时 `docker compose logs --tail 120 durian-api`。
+**重要约定**:
+- 下一次只改前端静态页面/文案/样式时,通常不需要重新构建镜像。
+- 用 XFTP 覆盖 `/opt/durian/frontend/dist/` 后,优先尝试浏览器 `Ctrl+F5` 强刷;如仍旧页面,再 `docker compose restart durian-api`。
+- 只有修改 `backend/` Python 代码、`backend/requirements-serve.txt`、`backend/Dockerfile`、`docker-compose.yml` 或依赖时,才需要 `docker compose build durian-api`。
+- 只有依赖出问题或需要彻底重装 Python 包时,才使用 `docker compose build --no-cache durian-api`。
 
 ---
-
 
 ## 当前状态
 
@@ -70,7 +73,8 @@ docker compose logs -f --tail 100 durian-api
 - [x] **2026-06-25** 服务器容器已启动,`/api/health` 和 `/api/varieties` 正常返回 3 品种
 - [x] **2026-06-25** 前端 footer 调整:移除「仅供学术演示」与 GitHub 链接,增加「开发人: 寒鸣」
 - [x] **2026-06-25** 生成器场景固定为白底特写:隐藏英文 prompt,按钮改为「开始生成」,减少与训练集不一致导致的不稳定
-- [ ] **2026-06-25** 服务器生成失败修复中:`OVStableDiffusionPipeline`/`NNCFConfig` 依赖链待无缓存重建验证
+- [x] **2026-06-25** 服务器镜像 `durian-aigc:latest` 成功构建,`OVStableDiffusionPipeline` 自检通过,容器已启动并成功生成图片
+- [ ] **2026-06-25** 后续功能修改优先覆盖 `frontend/dist/` 或重启容器,一般不需要重新构建镜像
 
 ## 关键产物路径
 
@@ -108,9 +112,9 @@ docker compose logs -f --tail 100 durian-api
 
 ## 待办
 
-- [ ] **服务器首件**:上传/覆盖 `backend/requirements-serve.txt` 与 `backend/Dockerfile`,执行 `docker compose build --no-cache durian-api`,确认出现 `OK: OVStableDiffusionPipeline`
-- [ ] 构建成功后启动容器,网页实际生成 1 张图验证
-- [ ] 如果生成成功,重新构建/上传新版 `frontend/dist/`,让 footer 显示「开发人: 寒鸣」且不显示 GitHub,生成器只显示固定「白底特写」场景
+- [x] **服务器首件**:上传/覆盖 `backend/requirements-serve.txt` 与 `backend/Dockerfile`,执行 `docker compose build --no-cache durian-api`,确认出现 `OK: OVStableDiffusionPipeline`
+- [x] 构建成功后启动容器,网页实际生成 1 张图验证
+- [x] 新版 `frontend/dist/` 已随镜像构建生效,footer 显示「开发人: 寒鸣」且不显示 GitHub,生成器只显示固定「白底特写」场景
 - [ ] 开防火墙 8008 + 云控制台安全组(若公网仍无法访问)
 - [ ] 浏览器从公网 IP 测试出图
 - [ ] (可选)清理 `/var/lib/docker.old.bak` 备份(确认稳定 1 周后)
